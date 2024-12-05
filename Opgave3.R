@@ -68,8 +68,8 @@ ggplot(df_nettotal, aes(x = `Antal ansatte Cvr-nr.`, y = nettotal)) +
 
 # Nu vil vi gerne se med økonomisk perpektiv siden antallet af medarbejdere er ikke alene afgørende lånemulighederne
 # Vi ved virksomhed med højt indtjening på aktiver er nemmere til at låne penge. Og jo robuste virksomheder er jo bedre adgang til lån
-# Derfortil det næste graf kigge vi på afkastningsgrad og soliditetsgrad
-# Vi skal første have gennemsnit af afkastningsgrad og soliditetsgrad fordi kolonner er blev delt fra 2016-2021
+# Derfor til det næste graf kigger vi på afkastningsgrad og soliditetsgrad
+# Vi skal først have gennemsnit af afkastningsgraden og soliditetsgraden fordi kolonnerne er blevet delt fra 2016-2021
 
 df_virksomhed_gns <- df %>%
   rowwise() %>%
@@ -277,3 +277,36 @@ ggplot(df_3long, aes(x = type, y = værdi, fill = svar_kategori)) +
   ) +
   scale_y_continuous(limits = c(0, 190),
                      breaks = seq(0, 190, by = 20))
+
+
+
+
+
+
+
+
+
+
+
+
+# Tilføj etableringsdato som X variabel i modellen
+library(lubridate)
+
+df_CLM <- df_CLM %>%
+  mutate(
+    alder = year(Sys.Date()) - year(dmy(Etableringsdato))
+  )
+
+df_CLM_clean_alder <- df_CLM %>%
+  mutate(across(c(gns_soliditet, gns_afkast, gns_balance, alder), 
+                ~scale(.) %>% as.vector))
+
+alder_clm <- clm(lånmuligheder ~ gns_soliditet + 
+                   gns_afkast + 
+                   gns_balance + 
+                   alder, 
+                 data = df_CLM_clean_alder, 
+                 link = "logit")
+summary(alder_clm)
+
+
